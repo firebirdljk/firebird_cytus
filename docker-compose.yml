@@ -1,0 +1,42 @@
+version: '3.3'
+
+services:
+  postgres:
+    image: postgres:12-alpine
+    environment:
+      - POSTGRES_USER=cytus
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=firebird_cytus
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+    restart: always
+
+  cytus:
+    image: firebird/cytus:v0.6.39
+    ports:
+      - "127.0.0.1:8536:8536"
+    restart: always
+    environment:
+      - RUST_LOG=debug
+    volumes:
+      - ./cytus.hjson:/config/config.hjson:ro
+    depends_on:
+      - postgres
+      - pictshare
+      - iframely
+
+  pictshare:
+    image: shtripok/pictshare:latest
+    ports:
+      - "127.0.0.1:8537:80"
+    volumes:
+      - ./volumes/pictshare:/usr/share/nginx/html/data
+    restart: always
+
+  iframely:
+    image: dogbin/iframely:latest
+    ports:
+      - "127.0.0.1:8061:80"
+    volumes:
+      - ./iframely.config.local.js:/iframely/config.local.js:ro
+    restart: always
